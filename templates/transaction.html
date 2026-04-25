@@ -6,7 +6,6 @@ Transactions - Finance Tracker
 
 {% block content %}
 <style>
-    /* Style for the popup window */
     .popup {
         display: none;
         position: fixed;
@@ -27,7 +26,7 @@ Transactions - Finance Tracker
         padding: 20px;
         border-radius: 5px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-        width: 400px; /* Set the width of the popup window */
+        width: 400px;
     }
 
     .close {
@@ -42,11 +41,36 @@ Transactions - Finance Tracker
     <div class="col-md-6">
         <h2>Transactions</h2>
     </div>
+
     <div class="col-md-6 text-end">
         <button class="btn btn-primary" onclick="openPopup()">Add Transaction</button>
-        <button class="btn btn-success" onclick="downloadCSV()"><i class="fa-solid fa-file-arrow-down"></i> CSV</button>
+        <button class="btn btn-success" onclick="downloadCSV()">
+            <i class="fa-solid fa-file-arrow-down"></i> CSV
+        </button>
     </div>
-    
+</div>
+
+<!-- Technical Improvement: Transaction Search Bar -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <form method="GET" action="{{ url_for('transactions') }}" class="d-flex">
+            <input
+                type="text"
+                name="q"
+                class="form-control me-2"
+                placeholder="Search by date, category, amount, payment method, or notes"
+                value="{{ search_query }}"
+            >
+
+            <button type="submit" class="btn btn-primary me-2">
+                <i class="fa-solid fa-magnifying-glass"></i> Search
+            </button>
+
+            <a href="{{ url_for('transactions') }}" class="btn btn-secondary">
+                Clear
+            </a>
+        </form>
+    </div>
 </div>
 
 <div class="table-responsive mt-4">
@@ -61,22 +85,32 @@ Transactions - Finance Tracker
                 <th>Action</th>
             </tr>
         </thead>
+
         <tbody>
-            {% for transaction in transactions %}
-    <tr>
-        <td>{{ transaction[4] }}</td>  {# Date #}
-        <td>{{ transaction[3] }}</td>  {# Category #}
-        <td>₹{{ transaction[2] }}</td>  {# Amount #}
-        <td>{{ transaction[6] }}</td>  {# Payment Method #}
-        <td>{{ transaction[5] }}</td>  {# Notes or Description #}
-        <td>
-            <!-- Button or link to trigger the delete action -->
-            <form action="{{ url_for('delete_transaction', transaction_id=transaction[0]) }}" method="post">
-                <button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>
-            </form>
-        </td>
-    </tr>
-    {% endfor %}
+            {% if transactions %}
+                {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction[4] }}</td>
+                    <td>{{ transaction[3] }}</td>
+                    <td>₹{{ transaction[2] }}</td>
+                    <td>{{ transaction[6] }}</td>
+                    <td>{{ transaction[5] }}</td>
+                    <td>
+                        <form action="{{ url_for('delete_transaction', transaction_id=transaction[0]) }}" method="post">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted">
+                        No transactions found.
+                    </td>
+                </tr>
+            {% endif %}
         </tbody>
     </table>
 </div>
@@ -85,13 +119,13 @@ Transactions - Finance Tracker
 <div id="popup" class="popup">
     <div class="popup-content p-4">
         <span class="close" onclick="closePopup()">&times;</span>
-        <!-- Form for adding transaction -->
+
         <form action="{{ url_for('add_transaction') }}" method="post">
-            <!-- Add input fields for transaction details -->
             <div class="mb-3">
                 <label for="date" class="form-label">Date:</label>
                 <input type="date" id="date" name="date" class="form-control" required>
             </div>
+
             <div class="mb-3">
                 <label for="category" class="form-label">Category:</label>
                 <select id="category" name="category" class="form-select" required>
@@ -105,10 +139,20 @@ Transactions - Finance Tracker
                     <option value="Subscriptions">Subscriptions</option>
                 </select>
             </div>
+
             <div class="mb-3">
                 <label for="amount" class="form-label">Amount:</label>
-                <input type="number" id="amount" name="amount" class="form-control" required>
+                <input
+                    type="number"
+                    id="amount"
+                    name="amount"
+                    class="form-control"
+                    min="0.01"
+                    step="0.01"
+                    required
+                >
             </div>
+
             <div class="mb-3">
                 <label for="payment_method" class="form-label">Payment Method:</label>
                 <select id="payment_method" name="payment_method" class="form-select" required>
@@ -116,57 +160,56 @@ Transactions - Finance Tracker
                     <option value="Cash">Cash</option>
                 </select>
             </div>
+
             <div class="mb-3">
                 <label for="notes" class="form-label">Notes:</label>
                 <textarea id="notes" name="notes" class="form-control"></textarea>
             </div>
+
             <button type="submit" class="btn btn-primary">Add Transaction</button>
         </form>
     </div>
 </div>
 
-
 <script>
-    // Function to open the popup window
     function openPopup() {
         document.getElementById("popup").style.display = "block";
     }
 
-    // Function to close the popup window
     function closePopup() {
         document.getElementById("popup").style.display = "none";
     }
 
-// Function to download the transaction table as a CSV file
-function downloadCSV() {
-    // Get all table rows except the header
-    const rows = document.querySelectorAll('table tbody tr');
+    function downloadCSV() {
+        const rows = document.querySelectorAll('table tbody tr');
 
-    // Prepare CSV content
-    let csvContent = 'Date,Category,Amount,Payment Method,Notes\n';
+        let csvContent = 'Date,Category,Amount,Payment Method,Notes\n';
 
-    // Iterate over table rows and append data to CSV content
-    rows.forEach(row => {
-        const columns = row.querySelectorAll('td');
-        const rowData = Array.from(columns).map(column => column.textContent.replace(/\n/g, '').replace('₹', '')); // Remove newline characters and INR symbol
-        csvContent += rowData.join(',') + '\n';
-    });
+        rows.forEach(row => {
+            const columns = row.querySelectorAll('td');
 
-    // Create a Blob object containing the CSV content
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+            if (columns.length >= 5 && !row.textContent.includes('No transactions found')) {
+                const rowData = [
+                    columns[0].textContent.trim(),
+                    columns[1].textContent.trim(),
+                    columns[2].textContent.trim().replace('₹', ''),
+                    columns[3].textContent.trim(),
+                    columns[4].textContent.trim()
+                ];
 
-    // Create a temporary anchor element
-    const a = document.createElement('a');
-    a.href = window.URL.createObjectURL(blob);
-    a.download = 'transactions.csv';
+                csvContent += rowData.join(',') + '\n';
+            }
+        });
 
-    // Append the anchor element to the document body and trigger a click event
-    document.body.appendChild(a);
-    a.click();
+        const blob = new Blob([csvContent], { type: 'text/csv' });
 
-    // Remove the anchor element from the document body
-    document.body.removeChild(a);
-}
+        const a = document.createElement('a');
+        a.href = window.URL.createObjectURL(blob);
+        a.download = 'transactions.csv';
 
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
 </script>
 {% endblock %}

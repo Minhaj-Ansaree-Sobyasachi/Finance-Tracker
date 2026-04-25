@@ -7,6 +7,7 @@ Home - Finance Tracker
 {% block content %}
 <div class="row mt-4">
     <h2>Welcome, {{ username }}!</h2>
+
     <div class="col-md-4">
         <div class="card">
             <div class="card-body">
@@ -15,6 +16,7 @@ Home - Finance Tracker
             </div>
         </div>
     </div>
+
     <div class="col-md-4">
         <div class="card">
             <div class="card-body">
@@ -23,6 +25,7 @@ Home - Finance Tracker
             </div>
         </div>
     </div>
+
     <div class="col-md-4">
         <div class="card">
             <div class="card-body">
@@ -31,20 +34,61 @@ Home - Finance Tracker
             </div>
         </div>
     </div>
+
+    <!-- Financial Improvement: Expense Prediction -->
+    <div class="col-md-12 mt-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                Month-End Expense Prediction
+            </div>
+
+            <div class="card-body">
+                <div class="row">
+
+                    <div class="col-md-3">
+                        <h6>Current Month Spending</h6>
+                        <p class="fw-bold">₹{{ current_month_spending }}</p>
+                    </div>
+
+                    <div class="col-md-3">
+                        <h6>Average Daily Spending</h6>
+                        <p class="fw-bold">₹{{ average_daily_spending }}</p>
+                    </div>
+
+                    <div class="col-md-3">
+                        <h6>Predicted Month-End Expense</h6>
+                        <p class="fw-bold">₹{{ predicted_month_end_expense }}</p>
+                    </div>
+
+                    <div class="col-md-3">
+                        <h6>Spending Status</h6>
+                        <span class="badge bg-{{ status_class }}">{{ spending_status }}</span>
+                    </div>
+
+                </div>
+
+                <p class="text-muted mt-3 mb-0">
+                    Prediction is calculated using current month spending, current day of the month, and total days in the month.
+                </p>
+            </div>
+        </div>
+    </div>
+
     <div class="col-md-6 mt-4">
         <div class="card">
             <div class="card-header">
-                Amount Spent Each Day (This Month)
+                Amount Spent Each Day
             </div>
             <div class="card-body">
                 <canvas id="dailySpendingChart" width="200" height="100"></canvas>
             </div>
         </div>
     </div>
+
     <div class="col-md-6 mt-4">
         <div class="card">
             <div class="card-header">
-                Amount Spent Each Day (This Month)
+                Monthly Spending Trend
             </div>
             <div class="card-body">
                 <canvas id="monthlySpendingChart" width="200" height="100"></canvas>
@@ -52,8 +96,8 @@ Home - Finance Tracker
         </div>
     </div>
 </div>
+
 <script>
-    // Function to fetch data for monthly spending
     function fetchMonthlySpendingData() {
         fetch('/monthly_spending_data')
             .then(response => response.json())
@@ -62,10 +106,10 @@ Home - Finance Tracker
             });
     }
 
-    // Function to render the monthly spending chart
     function renderMonthlySpendingChart(data) {
         const ctx = document.getElementById('monthlySpendingChart').getContext('2d');
-        const chart = new Chart(ctx, {
+
+        new Chart(ctx, {
             type: 'line',
             data: {
                 labels: data.labels,
@@ -87,12 +131,6 @@ Home - Finance Tracker
         });
     }
 
-    // Fetch data and render chart when the page loads
-    document.addEventListener('DOMContentLoaded', () => {
-        fetchMonthlySpendingData();
-    });
-
-    // Function to fetch data from Flask backend
     function fetchDailySpendingData() {
         fetch('/daily_spending_data')
             .then(response => response.json())
@@ -101,10 +139,10 @@ Home - Finance Tracker
             });
     }
 
-    // Function to render the daily spending chart
     function renderDailySpendingChart(data) {
         const ctx = document.getElementById('dailySpendingChart').getContext('2d');
-        const chart = new Chart(ctx, {
+
+        new Chart(ctx, {
             type: 'line',
             data: {
                 labels: data.labels,
@@ -126,13 +164,9 @@ Home - Finance Tracker
         });
     }
 
-    // Fetch data and render chart when the page loads
     document.addEventListener('DOMContentLoaded', () => {
+        fetchMonthlySpendingData();
         fetchDailySpendingData();
     });
-
-    
 </script>
-
-
 {% endblock %}
